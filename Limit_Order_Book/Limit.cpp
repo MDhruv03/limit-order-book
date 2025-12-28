@@ -5,7 +5,8 @@
 
 Limit::Limit(int _limitPrice, int _size, int _totalVolume)
     : limitPrice(_limitPrice), size(_size), totalVolume(_totalVolume),
-    headOrder(nullptr), tailOrder(nullptr) {}
+    headOrder(nullptr), tailOrder(nullptr) {
+}
 
 // removed original destructor, default destructor is fine
 
@@ -32,46 +33,71 @@ int Limit::getTotalVolume() const
 void Limit::partiallyFillTotalVolume(int orderedShares)
 {
     totalVolume -= orderedShares;
-    assert (totalVolume >= 0); // guarantee no over filling
+    assert(totalVolume >= 0); // guarantee no over filling
 }
 
 // Add an order to the limit
-void Limit::appendOrder(Order *order)
+void Limit::appendOrder(Order* order)
 {
+    // assert(order != nullptr);
+    // if (headOrder == nullptr) {
+    //     headOrder = tailOrder = order;
+    // } else {
+    //     tailOrder->nextOrder = order;
+    //     order->prevOrder = tailOrder;
+    //     order->nextOrder = nullptr;
+    //     tailOrder = order;
+    // }
+    // size += 1;
+    // totalVolume += order->getShares();
+    // order->parentLimit = this;
+
     assert(order != nullptr);
+
+    order->nextOrder = nullptr;
+    order->prevOrder = nullptr;
+    order->parentLimit = this;
+
     if (headOrder == nullptr) {
         headOrder = tailOrder = order;
-    } else {
+    }
+    else {
         tailOrder->nextOrder = order;
         order->prevOrder = tailOrder;
-        order->nextOrder = nullptr;
         tailOrder = order;
     }
-    size += 1;
+
+    size++;
     totalVolume += order->getShares();
-    order->parentLimit = this;
 }
 
 // ADD: remove specific order, handling case like cancel order, modify order etc.
-void Limit::removeOrder(Order *order)
+void Limit::removeOrder(Order* order)
 {
-    assert(order != nullptr && order->parentLimit == this);
-    if (order->prevOrder != nullptr) {
+    if (!order || order->parentLimit != this) {
+        return;   // already removed or invalid � SAFE EXIT
+    }
+
+    if (order->prevOrder) {
         order->prevOrder->nextOrder = order->nextOrder;
-    } else {
+    }
+    else {
         headOrder = order->nextOrder;
     }
-    if (order->nextOrder != nullptr) {
+
+    if (order->nextOrder) {
         order->nextOrder->prevOrder = order->prevOrder;
-    } else {
+    }
+    else {
         tailOrder = order->prevOrder;
     }
 
-    size -= 1;
+    size--;
     totalVolume -= order->getShares();
+
     order->parentLimit = nullptr;
-    order->prevOrder = order->nextOrder = nullptr;
-    assert(size >= 0 && totalVolume >= 0);
+    order->prevOrder = nullptr;
+    order->nextOrder = nullptr;
 }
 
 // ADD: helper function on checking if the limit is empty
@@ -101,8 +127,8 @@ void Limit::printBackward() const
 
 void Limit::print() const
 {
-    std::cout << "Limit Price: " << limitPrice 
-    << ", Limit Volume: " << totalVolume 
-    << ", Limit Size: " << size 
-    << std::endl;
+    std::cout << "Limit Price: " << limitPrice
+        << ", Limit Volume: " << totalVolume
+        << ", Limit Size: " << size
+        << std::endl;
 }
