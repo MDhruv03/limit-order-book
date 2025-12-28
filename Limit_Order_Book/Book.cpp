@@ -1,3 +1,5 @@
+  
+
 #include "Book.hpp"
 #include "Order.hpp"
 #include "Limit.hpp"
@@ -6,12 +8,12 @@
 #include <random>
 #include <iterator>
 #include <cassert>
-//Test
+
 Book::Book() = default;
 // When deleting the book need to ensure all used memory is freed
 Book::~Book()
 {
-    for (auto& pair: orderMap) {
+    for (auto& pair : orderMap) {
         delete pair.second;
     }
 }
@@ -27,7 +29,7 @@ Limit& Book::getOrCreateLimit(std::vector<Limit>& limits, int price, bool descen
 
     auto cmp = [descending](const Limit& l, int p) {
         return descending ? (l.getLimitPrice() > p) : (l.getLimitPrice() < p);
-    };
+        };
     auto it = std::lower_bound(limits.begin(), limits.end(), price, cmp);
     if (it != limits.end() && it->getLimitPrice() == price) {
         return *it;
@@ -65,18 +67,19 @@ int Book::crossLimitOrder(int orderId, bool buyOrSell, int shares, int LimitPric
 
             if (current->getShares() == 0) {
                 Order* next = current->nextOrder;
-                level.removeOrder(current);
-                orderMap.erase(current->getOrderId());
-                delete current;
+                level.removeOrder(current);   // delete happens here
                 current = next;
-            } else {
+            }
+
+            else {
                 current = current->nextOrder;
             }
         }
 
         if (level.isEmpty()) {
             removeEmptyLimit(opposite, i);
-        } else {
+        }
+        else {
             ++i;
         }
     }
@@ -92,7 +95,8 @@ int Book::crossStopOrder(int orderId, bool buyOrSell, int shares, int stopPrice)
             executeMarketOrder(orderId, true, shares);
             return 0;
         }
-    } else { // Sell stop
+    }
+    else { // Sell stop
         if (bestBid && stopPrice >= bestBid->getLimitPrice()) {
             executeMarketOrder(orderId, false, shares);
             return 0;
@@ -120,7 +124,8 @@ int Book::crossStopLimit(int orderId, bool buyOrSell, int shares, int limitPrice
             addLimitOrder(orderId, true, shares, limitPrice);
             return 0;
         }
-    } else {
+    }
+    else {
         if (bestBid && stopPrice >= bestBid->getLimitPrice()) {
             addLimitOrder(orderId, false, shares, limitPrice);
             return 0;
@@ -146,18 +151,19 @@ void Book::executeMarketOrder(int orderId, bool buyOrSell, int shares) {
 
             if (current->getShares() == 0) {
                 Order* next = current->nextOrder;
-                level.removeOrder(current);
-                orderMap.erase(current->getOrderId());
-                delete current;
+                level.removeOrder(current);   // delete happens here
                 current = next;
-            } else {
+            }
+
+            else {
                 current = current->nextOrder;
             }
         }
 
         if (level.isEmpty()) {
             removeEmptyLimit(opposite, i);
-        } else {
+        }
+        else {
             ++i;
         }
     }
@@ -171,7 +177,8 @@ void Book::convertStopLimitToLimit(Order* order, bool buyOrSell) {
         std::vector<Limit>& side = buyOrSell ? buyLimits : sellLimits;
         Limit& level = getOrCreateLimit(side, order->getLimit(), buyOrSell);
         level.appendOrder(order);
-    } else {
+    }
+    else {
         // Fully filled
         orderMap.erase(order->getOrderId());
         delete order;
@@ -196,7 +203,8 @@ void Book::triggerStopOrders() {
             executeMarketOrder(0, true, head->getShares());
             orderMap.erase(head->getOrderId());
             delete head;
-        } else {
+        }
+        else {
             // Stop-limit
             convertStopLimitToLimit(head, true);
         }
@@ -220,7 +228,8 @@ void Book::triggerStopOrders() {
             executeMarketOrder(0, false, head->getShares());
             orderMap.erase(head->getOrderId());
             delete head;
-        } else {
+        }
+        else {
             convertStopLimitToLimit(head, false);
         }
 
@@ -268,17 +277,18 @@ void Book::cancelLimitOrder(int orderId) {
     if (level->isEmpty()) {
         std::vector<Limit>* side = nullptr;
 
-        if (std::find_if(buyLimits.begin(), buyLimits.end(), 
-                         [level](const Limit& l) { return &l == level; }) != buyLimits.end()) {
+        if (std::find_if(buyLimits.begin(), buyLimits.end(),
+            [level](const Limit& l) { return &l == level; }) != buyLimits.end()) {
             side = &buyLimits;
-        } else if (std::find_if(sellLimits.begin(), sellLimits.end(), 
-                                [level](const Limit& l) { return &l == level; }) != sellLimits.end()) {
+        }
+        else if (std::find_if(sellLimits.begin(), sellLimits.end(),
+            [level](const Limit& l) { return &l == level; }) != sellLimits.end()) {
             side = &sellLimits;
         }
 
         if (side) {
-            auto it = std::find_if(side->begin(), side->end(), 
-                                   [level](const Limit& l) { return &l == level; });
+            auto it = std::find_if(side->begin(), side->end(),
+                [level](const Limit& l) { return &l == level; });
             removeEmptyLimit(*side, std::distance(side->begin(), it));
         }
     }
@@ -436,7 +446,8 @@ void Book::printOrder(int orderId) const {
     Order* o = searchOrderMap(orderId);
     if (o) {
         o->print();
-    } else {
+    }
+    else {
         std::cout << "Order " << orderId << " not found.\n";
     }
 }
@@ -459,7 +470,8 @@ Order* Book::getRandomOrder(int key, std::mt19937 gen) const
             return *it;
         }
         return nullptr;
-    } else if (key == 1)
+    }
+    else if (key == 1)
     {
         if (stopOrders.size() > 500)
         {
@@ -473,7 +485,8 @@ Order* Book::getRandomOrder(int key, std::mt19937 gen) const
             return *it;
         }
         return nullptr;
-    } else if (key == 2)
+    }
+    else if (key == 2)
     {
         if (stopLimitOrders.size() > 500)
         {
